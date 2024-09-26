@@ -15,7 +15,7 @@ const getPostComments=async(postId)=>{
 
 const useGetComments=(postId)=>useQuery({
     queryKey:['commentsArray',postId],
-    queryFn:()=>getPostComments(postId)
+    queryFn:()=>getPostComments(postId),
 })
 
 export default useGetComments;

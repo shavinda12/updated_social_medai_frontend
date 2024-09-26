@@ -4,6 +4,7 @@ import Button from '../components/Button';
 import Post from '../components/Post';
 import {useNavigation} from '@react-navigation/native';
 import useGetPosts from '../hooks/useGetPosts';
+import ErrorModal from '../components/ErrorModal';
 
 const Home = () => {
   const navigation = useNavigation();
