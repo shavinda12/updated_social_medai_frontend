@@ -14,12 +14,15 @@ import Button from '../components/Button';
 import useGetComments from '../hooks/useGetComments';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import axios from 'axios';
+import ErrorModal from '../components/ErrorModal';
+
 
 const TitleScreen = ({route}) => {
   const {title, description, comment, postId} = route.params;
   const {data: comments} = useGetComments(postId);
-  console.log(comments);
   const [newComment, setNewComment] = useState('');
+  const [error, setError] = useState('');
+  const [visibility, setVisibility] = useState(false);
   const queryClient = useQueryClient();
 
   const addComment = useMutation({
@@ -33,7 +36,19 @@ const TitleScreen = ({route}) => {
     onSuccess: (backendResult, newPostComment) => {
       queryClient.invalidateQueries(['commentsArray', newPostComment.postId]);
       queryClient.invalidateQueries(['posts']);
-      setNewComment("")
+      setNewComment('');
+    },
+    onError: error => {
+      if (error.response) {
+        if (error.response.status == 500) {
+          setError('Internal Server Error');
+        } else if (error.response.status == 404) {
+          setError('Network Error');
+        } else {
+          setError('Some thing went wrong..');
+        }
+      }
+      setVisibility(true);
     },
   });
 
@@ -44,24 +59,25 @@ const TitleScreen = ({route}) => {
     }
   };
 
-  if (addComment.error) {
-    console.log(addComment.error);
-  }
+  const closeModal = () => {
+    setVisibility(false);
+    setError('');
+  };
 
   return (
-    <View style={{flex:1}}> 
+    <View style={{flex: 1}}>
       <AppHeaderBackArrow prevScreen={'Home'} title="Title" />
       <Post title={title} description={description} comment={comment} />
-      <View style={{flex:1}}>
+      <View style={{flex: 1}}>
         {comments?.length || 0 > 0 ? (
           <ScrollView>
-            {comments.map(({comment,commentId}) => (
+            {comments.map(({comment, commentId}) => (
               <Comment key={commentId} comment={comment} />
             ))}
           </ScrollView>
         ) : null}
       </View>
-      <View style={{position:''}}>
+      <View style={{position: ''}}>
         <TextInput
           multiline={true}
           numberOfLines={4}
@@ -74,6 +90,11 @@ const TitleScreen = ({route}) => {
         />
         <Button title="Comment" function={onSubmit} />
       </View>
+      <ErrorModal
+        visibility={visibility}
+        closeModal={closeModal}
+        error={error}
+      />
     </View>
   );
 };
